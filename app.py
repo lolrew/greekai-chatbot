@@ -42,7 +42,7 @@ config = types.GenerateContentConfig(
 
 # Maintain a persistent chat session
 chat_session = client.chats.create(
-    model="gemini-2.0-flash-exp",
+    model="gemini-1.5-flash",
     config=config
 )
 
