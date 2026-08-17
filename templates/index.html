@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GreekAI | Enterprise AI</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+      :root {
+        --bg-app-1: #0f172a;
+        --bg-app-2: #1e1b4b;
+        --bg-chat: #1e293b;
+        --bg-surface: #090d16;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+        --brand-color: #3b82f6;
+        --brand-hover: #2563eb;
+        --system-bubble: #273548;
+        --user-bubble: #2563eb;
+        --user-text: #ffffff;
+        --font-family: "Inter", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: var(--font-family);
+        background: linear-gradient(135deg, var(--bg-app-1) 0%, var(--bg-app-2) 100%);
+        color: var(--text-primary);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1.5rem;
+        margin: 0;
+      }
+
+      .app-layout {
+        width: 100%;
+        max-width: 900px;
+        height: 90vh;
+        background-color: var(--bg-chat);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Header */
+      .app-header {
+        background-color: rgba(30, 41, 59, 0.7);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 1.5rem;
+        flex-shrink: 0;
+      }
+
+      .header-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.01em;
+      }
+
+      .header-subtitle {
+        font-size: 0.813rem;
+        color: var(--text-secondary);
+        margin: 0;
+      }
+
+      .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.813rem;
+        color: #34d399;
+        background-color: rgba(6, 78, 59, 0.4);
+        border: 1px solid rgba(52, 211, 153, 0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-weight: 500;
+      }
+
+      .status-dot {
+        height: 7px;
+        width: 7px;
+        background-color: #34d399;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 8px #34d399;
+      }
+
+      /* Chat Messages */
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        scroll-behavior: smooth;
+        background-color: var(--bg-chat);
+      }
+
+      .chat-messages::-webkit-scrollbar {
+        width: 6px;
+      }
+      .chat-messages::-webkit-scrollbar-track {
+        background: var(--bg-chat);
+      }
+      .chat-messages::-webkit-scrollbar-thumb {
+        background-color: var(--border-color);
+        border-radius: 3px;
+      }
+
+      /* Message Wrapper */
+      .message-wrapper {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        max-width: 85%;
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .message-wrapper.system {
+        align-self: flex-start;
+      }
+
+      .message-wrapper.user {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+      }
+
+      /* Avatar */
+      .avatar {
+        height: 36px;
+        width: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.125rem;
+      }
+
+      .message-wrapper.system .avatar {
+        background-color: #334155;
+        color: #60a5fa;
+        border: 1px solid var(--border-color);
+      }
+
+      .message-wrapper.user .avatar {
+        background-color: var(--brand-color);
+        color: white;
+      }
+
+      /* Bubble - Enhanced for Markdown */
+      .bubble {
+        padding: 0.875rem 1.125rem;
+        border-radius: 12px;
+        font-size: 0.938rem;
+        line-height: 1.6;
+        word-wrap: break-word;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .message-wrapper.system .bubble {
+        background-color: var(--system-bubble);
+        color: var(--text-primary);
+        border-top-left-radius: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+
+      .message-wrapper.user .bubble {
+        background-color: var(--brand-color);
+        color: var(--user-text);
+        border-top-right-radius: 2px;
+      }
+
+      /* Markdown Styling */
+      .bubble h1, .bubble h2, .bubble h3, .bubble h4, .bubble h5, .bubble h6 {
+        margin-top: 0.75rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .bubble h1 { font-size: 1.5rem; }
+      .bubble h2 { font-size: 1.25rem; }
+      .bubble h3 { font-size: 1.1rem; color: #60a5fa; }
+      .bubble h4 { font-size: 1rem; }
+      
+      .bubble p {
+        margin-bottom: 0.5rem;
+        margin-top: 0;
+      }
+      
+      .bubble ul, .bubble ol {
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .bubble li {
+        margin-bottom: 0.25rem;
+      }
+      
+      .bubble strong {
+        color: #fbbf24;
+        font-weight: 600;
+      }
+      
+      .bubble em {
+        font-style: italic;
+      }
+      
+      .bubble blockquote {
+        border-left: 3px solid var(--brand-color);
+        padding-left: 1rem;
+        margin: 0.5rem 0;
+        color: var(--text-secondary);
+        font-style: italic;
+      }
+      
+      .bubble code {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-family: 'Courier New', monospace;
+      }
+      
+      .bubble pre {
+        background-color: rgba(0, 0, 0, 0.3);
+        padding: 0.75rem;
+        border-radius: 6px;
+        overflow-x: auto;
+        margin: 0.5rem 0;
+      }
+      
+      .bubble hr {
+        border: none;
+        border-top: 1px solid var(--border-color);
+        margin: 1rem 0;
+      }
+      
+      .bubble table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.5rem 0;
+      }
+      
+      .bubble th, .bubble td {
+        border: 1px solid var(--border-color);
+        padding: 0.5rem;
+        text-align: left;
+      }
+      
+      .bubble th {
+        background-color: rgba(255, 255, 255, 0.05);
+        font-weight: 600;
+      }
+      
+      .bubble a {
+        color: #60a5fa;
+        text-decoration: none;
+      }
+      
+      .bubble a:hover {
+        text-decoration: underline;
+      }
+
+      /* User message overrides */
+      .message-wrapper.user .bubble strong {
+        color: #fcd34d;
+      }
+      
+      .message-wrapper.user .bubble h3 {
+        color: #fcd34d;
+      }
+      
+      .message-wrapper.user .bubble blockquote {
+        border-left-color: #fcd34d;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      /* Typing Indicator */
+      .typing-indicator {
+        padding: 0.5rem 0;
+        font-style: italic;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        display: none;
+        margin-left: 3.25rem;
+      }
+
+      .typing-indicator .dots::after {
+        content: '...';
+        animation: dots 1.5s steps(4, end) infinite;
+      }
+
+      @keyframes dots {
+        0%, 20% { content: ''; }
+        40% { content: '.'; }
+        60% { content: '..'; }
+        80%, 100% { content: '...'; }
+      }
+
+      /* Input Area */
+      .chat-input-area {
+        background-color: rgba(30, 41, 59, 0.7);
+        border-top: 1px solid var(--border-color);
+        padding: 1rem 1.5rem;
+        flex-shrink: 0;
+      }
+
+      .input-group-custom {
+        display: flex;
+        gap: 0.5rem;
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 0.5rem 0.75rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        align-items: flex-end;
+      }
+
+      .input-group-custom:focus-within {
+        border-color: var(--brand-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      }
+
+      .input-group-custom textarea {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-family: var(--font-family);
+        font-size: 0.938rem;
+        color: var(--text-primary);
+        resize: none;
+        max-height: 120px;
+        outline: none;
+        line-height: 1.5;
+        padding: 0;
+        min-height: 24px;
+      }
+
+      .input-group-custom textarea::placeholder {
+        color: var(--text-secondary);
+      }
+
+      .send-btn {
+        background-color: var(--brand-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        transition: background-color 0.2s, opacity 0.2s;
+        flex-shrink: 0;
+        height: 36px;
+        width: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .send-btn:hover:not(:disabled) {
+        background-color: var(--brand-hover);
+      }
+
+      .send-btn:disabled {
+        background-color: #334155;
+        color: #64748b;
+        cursor: not-allowed;
+      }
+
+      .send-btn i {
+        font-size: 1rem;
+      }
+
+      .input-hint {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        padding: 0.25rem 0.25rem 0;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        body {
+          padding: 0;
+        }
+        
+        .app-layout {
+          height: 100vh;
+          border-radius: 0;
+          max-width: 100%;
+        }
+        
+        .message-wrapper {
+          max-width: 90%;
+        }
+        
+        .app-header {
+          padding: 0.75rem 1rem;
+        }
+        
+        .chat-messages {
+          padding: 1rem;
+        }
+        
+        .chat-input-area {
+          padding: 0.75rem 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-layout">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <h1 class="header-title mb-0">
+              <i class="fas fa-bolt me-2" style="color: var(--brand-color);"></i>
+              GreekAI
+            </h1>
+            <p class="header-subtitle">Powered by the Archive of Olympus</p>
+          </div>
+          <div class="status-indicator">
+            <span class="status-dot"></span>
+            Operational
+          </div>
+        </div>
+      </header>
+
+      <!-- Chat Messages -->
+      <div class="chat-messages" id="chatMessages">
+        <div class="message-wrapper system">
+          <div class="avatar">
+            <i class="fas fa-brain"></i>
+          </div>
+          <div class="bubble">
+            <p>Welcome. I am the digital archivist. I possess comprehensive knowledge of Hellenic myths, deities, and heroes. Define the parameters of your query.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div class="typing-indicator" id="typingIndicator">
+        <span class="dots">Archivist is retrieving data</span>
+      </div>
+
+      <!-- Input Area -->
+      <div class="chat-input-area">
+        <div class="input-group-custom">
+          <textarea
+            id="userInput"
+            placeholder="Ask about the Titanomachy, Odysseus, or Mount Olympus..."
+            rows="1"
+          ></textarea>
+          <button
+            id="sendBtn"
+            class="send-btn"
+            onclick="sendMessage()"
+            disabled
+            title="Send Message"
+          >
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+        <div class="input-hint">
+          <i class="fas fa-keyboard me-1"></i>
+          Press Enter to send, Shift+Enter for new line
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const chatMessages = document.getElementById('chatMessages');
+      const userInput = document.getElementById('userInput');
+      const sendBtn = document.getElementById('sendBtn');
+      const typingIndicator = document.getElementById('typingIndicator');
+      let isSending = false;
+
+      // Auto-resize textarea
+      function autoResize() {
+        userInput.style.height = 'auto';
+        userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+      }
+
+      // Toggle send button state
+      function toggleButtonState() {
+        const text = userInput.value.trim();
+        if (text.length > 0 && !isSending) {
+          sendBtn.disabled = false;
+        } else {
+          sendBtn.disabled = true;
+        }
+      }
+
+      // Input event listeners
+      userInput.addEventListener('input', () => {
+        autoResize();
+        toggleButtonState();
+      });
+
+      userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (!sendBtn.disabled) {
+            sendMessage();
+          }
+        }
+      });
+
+      // Send message function
+      async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text || isSending) return;
+
+        isSending = true;
+        sendBtn.disabled = true;
+        userInput.disabled = true;
+
+        // Append user message
+        appendMessage(text, 'user');
+        userInput.value = '';
+        autoResize();
+
+        // Show typing indicator
+        typingIndicator.style.display = 'block';
+        scrollToBottom();
+
+        try {
+          const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text }),
+          });
+
+          const data = await response.json();
+          typingIndicator.style.display = 'none';
+          
+          // Check if response contains HTML (from Markdown) or plain text
+          const isHtml = data.response && data.response.includes('<');
+          if (isHtml) {
+            appendHTMLMessage(data.response, 'system');
+          } else {
+            appendMessage(data.response, 'system');
+          }
+        } catch (error) {
+          typingIndicator.style.display = 'none';
+          appendMessage('Connection error to the archives. Please try again.', 'system');
+        } finally {
+          isSending = false;
+          userInput.disabled = false;
+          userInput.focus();
+          toggleButtonState();
+        }
+      }
+
+      // Append plain text message
+      function appendMessage(text, sender) {
+        const wrapperDiv = document.createElement('div');
+        wrapperDiv.classList.add('message-wrapper', sender);
+
+        const avatarDiv = document.createElement('div');
+        avatarDiv.classList.add('avatar');
+        
+        if (sender === 'user') {
+          avatarDiv.innerHTML = '<i class="fas fa-user"></i>';
+        } else {
+          avatarDiv.innerHTML = '<i class="fas fa-brain"></i>';
+        }
+
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.classList.add('bubble');
+        bubbleDiv.textContent = text;
+
+        wrapperDiv.appendChild(avatarDiv);
+        wrapperDiv.appendChild(bubbleDiv);
+        chatMessages.appendChild(wrapperDiv);
+        scrollToBottom();
+      }
+
+      // Append HTML message (for Markdown rendering)
+      function appendHTMLMessage(htmlContent, sender) {
+        const wrapperDiv = document.createElement('div');
+        wrapperDiv.classList.add('message-wrapper', sender);
+
+        const avatarDiv = document.createElement('div');
+        avatarDiv.classList.add('avatar');
+        
+        if (sender === 'user') {
+          avatarDiv.innerHTML = '<i class="fas fa-user"></i>';
+        } else {
+          avatarDiv.innerHTML = '<i class="fas fa-brain"></i>';
+        }
+
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.classList.add('bubble');
+        bubbleDiv.innerHTML = htmlContent;
+
+        wrapperDiv.appendChild(avatarDiv);
+        wrapperDiv.appendChild(bubbleDiv);
+        chatMessages.appendChild(wrapperDiv);
+        scrollToBottom();
+      }
+
+      // Scroll to bottom
+      function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      // Initialize
+      toggleButtonState();
+      
+      // Handle window resize for textarea
+      window.addEventListener('resize', autoResize);
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
