@@ -2,8 +2,7 @@ import os
 import time
 import markdown
 from flask import Flask, render_template, request, jsonify
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -16,7 +15,8 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable not set")
 
-client = genai.Client(api_key=API_KEY)
+# Configure the API
+genai.configure(api_key=API_KEY)
 
 # Set up the system instruction persona for the chatbot
 system_instruction = (
@@ -35,16 +35,17 @@ system_instruction = (
     "7. Use 1., 2., 3. for numbered lists when appropriate"
 )
 
-config = types.GenerateContentConfig(
+# Create the model
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
     system_instruction=system_instruction,
-    temperature=0.7,
+    generation_config={
+        "temperature": 0.7,
+    }
 )
 
-# Maintain a persistent chat session
-chat_session = client.chats.create(
-    model="gemini-pro",
-    config=config
-)
+# Start a chat session
+chat_session = model.start_chat(history=[])
 
 @app.route("/")
 def home():
