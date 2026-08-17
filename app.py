@@ -2,7 +2,7 @@ import os
 import time
 import markdown
 from flask import Flask, render_template, request, jsonify
-from google import genai
+import google.generativeai as genai
 from google.genai import types
 from dotenv import load_dotenv
 
