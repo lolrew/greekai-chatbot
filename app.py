@@ -47,7 +47,7 @@ config = types.GenerateContentConfig(
 # 3. "gemini-1.0-pro" (Older but stable)
 
 chat_session = client.chats.create(
-    model="gemini-1.5-flash",  # Changed from "gemini-pro"
+    model="gemini-2.5-flash",  # Changed from "gemini-pro"
     config=config
 )
 
