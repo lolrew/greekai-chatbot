@@ -1,7 +1,6 @@
 import os
-import time
+import streamlit as st
 import markdown
-from flask import Flask, render_template, request, jsonify
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -9,7 +8,52 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-app = Flask(__name__)
+# Page configuration (Must be the first Streamlit command)
+st.set_page_config(
+    page_title="GreekAI | Olympus Archivist",
+    page_icon="🛡️",
+    layout="centered"
+)
+
+# Custom minimal theme styling (Zero layout/responsiveness CSS needed)
+st.markdown("""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #090a0f 0%, #131620 100%);
+        color: #f1f5f9;
+        font-family: 'Inter', sans-serif;
+    }
+    .app-title-container {
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+    .app-icon-badge {
+        height: 40px;
+        width: 40px;
+        background: linear-gradient(135deg, #10b981, #047857);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.1rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Render professional header
+st.markdown("""
+    <div class="app-title-container">
+        <div class="app-icon-badge">
+            <i class="fas fa-network-wired"></i>
+        </div>
+        <div style="font-size: 1.75rem; font-weight: 700;">GreekAI Archive</div>
+    </div>
+    <div style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 1.5rem; padding-left: 3.25rem;">Enterprise Hellenic Intelligence System</div>
+""", unsafe_allow_html=True)
 
 # Initialize the Gemini client using environment variable
 API_KEY = os.getenv("GEMINI_API_KEY")
@@ -35,52 +79,85 @@ config = types.GenerateContentConfig(
     temperature=0.7,
 )
 
-# Maintain a persistent chat session
-# Try these model names in order:
-# 1. "gemini-1.5-flash" (Recommended - fastest)
-# 2. "gemini-1.5-pro" (More powerful)
-# 3. "gemini-1.0-pro" (Older but stable)
+# Initialize a persistent chat session in Streamlit's session state
+if "chat_session" not in st.session_state:
+    st.session_state.chat_session = client.chats.create(
+        model="gemini-3.5-flash",  # Updated to standard current model variant
+        config=config
+    )
 
-chat_session = client.chats.create(
-    model="gemini-3.5-flash",  # Changed from "gemini-pro"
-    config=config
-)
+# Header Section
+st.title("⚡ GreekAI")
+st.caption("Powered by the Archive of Olympus")
+st.markdown("---")
 
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-@app.route("/chat", methods=["POST"])
-def chat():
-    user_message = request.json.get("message", "").strip()
-    if not user_message:
-        return jsonify({"response": "Speak, mortal, for your mind was blank."})
+# Initialize chat message history
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {
+            "role": "assistant", 
+            "content": "Welcome. I am the digital archivist. I possess comprehensive knowledge of Hellenic myths, deities, and heroes. Define the parameters of your query."
+        }
+    ]
     
-    # Retry configuration for high-demand 503 errors
-    max_retries = 3
-    delay = 2  # seconds
+# Display prior chat history
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-    for attempt in range(max_retries):
-        try:
-            response = chat_session.send_message(user_message)
-            
-            # Convert Markdown to HTML
-            html_response = markdown.markdown(
-                response.text,
-                extensions=['extra', 'codehilite', 'toc']
-            )
-            
-            return jsonify({"response": html_response})
-        except Exception as e:
-            error_str = str(e)
-            # Check if it's a temporary 503 or overloaded error and we have retries left
-            if ("503" in error_str or "UNAVAILABLE" in error_str) and attempt < max_retries - 1:
-                time.sleep(delay)
-                delay *= 2  # Exponential backoff
-                continue
-            else:
-                return jsonify({"response": f"[The mists of Olympus obscure your query: {e}]"})
+# React to user input via Streamlit's built-in mobile-optimized keyboard bar
+if prompt := st.chat_input("Ask about the Titanomachy, Odysseus, or Mount Olympus..."):
+    # Append user message to history and display it
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-# For local development
-if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+
+# Generate assistant response with a status spinner and error retries
+    with st.chat_message("assistant"):
+        with st.spinner("Archivist is retrieving data..."):
+            max_retries = 3
+            bot_reply = None
+            
+            for attempt in range(max_retries):
+                try:
+                    response = st.session_state.chat_session.send_message(prompt)
+                    bot_reply = response.text
+                    break
+                except Exception as e:
+                    error_str = str(e)
+                    if prompt := st.chat_input("Query architectural or mythological records..."):
+                        st.session_state.messages.append({"role": "user", "content": prompt})
+                        with st.chat_message("user"):
+                            st.markdown(prompt)
+
+                        # Generate assistant response with a professional spinner and god-like limit handling
+                        with st.chat_message("assistant"):
+                            with st.spinner("Executing query pipeline..."):
+                                max_retries = 3
+                                bot_reply = None
+                                
+                                for attempt in range(max_retries):
+                                    try:
+                                        response = st.session_state.chat_session.send_message(prompt)
+                                        bot_reply = response.text
+                                        break
+                                    except Exception as e:
+                                        error_str = str(e)
+                                        # Handle Rate Limits / Quota Exhaustion with a dramatic, god-like persona tone
+                                        if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                                            bot_reply = (
+                                                "**[Oracle Notice]** *The divine energies of Mount Olympus are momentarily "
+                                                "exhausted from your rapid volume of inquiries. Please allow the temporal "
+                                                "mists to clear—try transmitting again shortly.*"
+                                            )
+                                            break
+                                        elif ("503" in error_str or "UNAVAILABLE" in error_str) and attempt < max_retries - 1:
+                                            continue
+                                        else:
+                                            bot_reply = f"**[System Fault]** *Atmospheric disturbance detected in the archive core:* _{e}_"
+                                
+                                st.markdown(bot_reply)
+                                
+                        # Save assistant response to history
+                        st.session_state.messages.append({"role": "assistant", "content": bot_reply})

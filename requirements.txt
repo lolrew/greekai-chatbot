@@ -3,3 +3,5 @@ google-genai==1.0.0
 markdown==3.7
 python-dotenv==1.0.1
 gunicorn==23.0.0
+streamlit
+requests
