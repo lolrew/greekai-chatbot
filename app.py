@@ -91,7 +91,7 @@ config = types.GenerateContentConfig(
 # Initialize a persistent chat session in Streamlit's session state
 if "chat_session" not in st.session_state:
     st.session_state.chat_session = client.chats.create(
-        model="gemini-2.5-flash",
+        model="gemini-3.8-flash",
         config=config
     )
 
