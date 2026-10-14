@@ -126,7 +126,7 @@ if prompt := st.chat_input("Ask about the Titanomachy, Odysseus, or Mount Olympu
                     break
                 except Exception as e:
                     error_str = str(e)
-                    if prompt := st.chat_input("Query architectural or mythological records..."):
+                    if prompt := st.chat_input("Query architectural or mythological records...", key="user_prompt"):
                         st.session_state.messages.append({"role": "user", "content": prompt})
                         with st.chat_message("user"):
                             st.markdown(prompt)
